@@ -3,3 +3,7 @@ matplotlib
 pillow
 scipy
 opencv-python
+scikit-learn
+pandas
+colorspacious
+scikit-image
