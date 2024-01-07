@@ -3,7 +3,8 @@ import numpy as np
 from sklearn.neighbors import NearestNeighbors
 import os
 import random
-from sklearn.metrics.pairwise import cosine_similarity
+from matplotlib import pyplot as plt
+import csv
 
 os.chdir('exercise_8')
 
@@ -91,42 +92,80 @@ for category in categories:
     selected_images = random.sample(category_images, min(5, len(category_images)))
     random_images.extend(selected_images)
 
-random_images = ['orchids_00033.jpg', 'orchids_00029.jpg', 'orchids_00048.jpg', 'orchids_00037.jpg', 'orchids_00045.jpg', 'hydrangeas_00028.jpg', 'hydrangeas_00017.jpg', 'hydrangeas_00043.jpg', 'hydrangeas_00005.jpg', 'hydrangeas_00013.jpg', 'daisies_00080.jpg', 'daisies_00025.jpg', 'daisies_00088.jpg', 'daisies_00036.jpg', 'daisies_00043.jpg', 'lilies_00002.jpg', 'lilies_00017.jpg', 'lilies_00066.jpg', 'lilies_00059.jpg', 'lilies_00054.jpg', 'gardenias_00011.jpg', 'gardenias_00010.jpg', 'gardenias_00069.jpg', 'gardenias_00067.jpg', 'gardenias_00071.jpg', 'hibiscus_00018.jpg', 'hibiscus_00007.jpg', 'hibiscus_00077.jpg', 'hibiscus_00067.jpg', 'hibiscus_00047.jpg', 'tulip_00049.jpg', 'tulip_00079.jpg', 'tulip_00017.jpg', 'tulip_00012.jpg', 'tulip_00063.jpg', 'bougainvillea_00003.jpg', 'bougainvillea_00021.jpg', 'bougainvillea_00057.jpg', 
-'bougainvillea_00019.jpg', 'bougainvillea_00009.jpg', 'peonies_00013.jpg', 'peonies_00018.jpg', 'peonies_00009.jpg', 'peonies_00024.jpg', 'peonies_00043.jpg', 'garden_roses_00065.jpg', 'garden_roses_00077.jpg', 'garden_roses_00051.jpg', 'garden_roses_00030.jpg', 'garden_roses_00012.jpg']
-
 # Εκτύπωση των τυχαίων εικόνων
 for i, image_path in enumerate(random_images):
-    print(f"Random Image {i+1}: {image_path}")
+    print(f"Random Image {i+1}: {image_path} - Category: {category}")
 
-# # Εκτύπωση των top-10 αποτελεσμάτων για όλους τους δυνατούς συνδυασμούς
-# for i, query_image_path in enumerate(random_images):
-#     print(f"\nQuery Image {i+1}: {query_image_path}")
+# Εκτύπωση των top-10 αποτελεσμάτων για όλους τους δυνατούς συνδυασμούς
+csv_filename = 'c_results.csv'
 
-#     # Φόρτωση της query image
-#     query_image = cv2.imread(query_image_path, cv2.IMREAD_GRAYSCALE)
+with open(csv_filename, 'w', newline='') as csvfile:
+    csv_writer = csv.writer(csvfile)
+    csv_writer.writerow(['query_image', 'result_image', 'position', 'L1', 'L2'])
 
-#     # Υπολογισμός των εικόνων που δεν είναι η query image
-#     train_images = [image_path for image_path in random_images if image_path != query_image_path]
+    os.chdir(folder_path)
 
-#     # Κατασκευή των features για την εκπαίδευση (χρησιμοποιήστε τα κατάλληλα features)
-#     features = []
-#     for image_path in train_images:
-#         train_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-#         feature = compute_normalized_intensity_histogram(train_image).flatten()
-#         features.append(feature)
+    for i, query_image_path in enumerate(random_images):
+        print(f"\nQuery Image {i+1}: {query_image_path} - Category: {category}")
 
-#     # Κατασκευή του feature για την query image
-#     query_feature = compute_normalized_intensity_histogram(query_image).flatten()
+        # Φόρτωση της query image
+        query_image = cv2.imread(query_image_path, cv2.IMREAD_GRAYSCALE)
 
-#     # Εκπαίδευση του μοντέλου Nearest Neighbors
-#     neighbors_model = NearestNeighbors(n_neighbors=10, metric='cosine')  # Μετρική cosine similarity
-#     neighbors_model.fit(features)
+        # Υπολογισμός των εικόνων που δεν είναι η query image
+        train_images = [image_path for image_path in random_images if image_path != query_image_path]
 
-#     # Υπολογισμός των top-10 αποτελεσμάτων
-#     distances, indices = neighbors_model.kneighbors([query_feature])
+        # Κατασκευή των features για την εκπαίδευση (χρησιμοποιήστε τα κατάλληλα features)
+        features = []
+        for image_path in train_images:
+            train_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+            feature = compute_normalized_intensity_histogram(train_image).flatten()
+            features.append(feature)
 
-#     # Εκτύπωση των top-10 αποτελεσμάτων
-#     print("Top-10 Retrieval Results:")
-#     for j, index in enumerate(indices.flatten()):
-#         result_image_path = train_images[index]
-#         print(f"{j+1}. {result_image_path} - Cosine Similarity: {1 - distances.flatten()[j]}")
+        # Κατασκευή του feature για την query image
+        query_feature = compute_normalized_intensity_histogram(query_image).flatten()
+
+        # Εκπαίδευση του μοντέλου Nearest Neighbors
+        neighbors_model = NearestNeighbors(n_neighbors=10, metric='euclidean')  # Μετρική cosine similarity
+        neighbors_model.fit(features)
+
+        # Υπολογισμός των top-10 αποτελεσμάτων
+        distances, indices = neighbors_model.kneighbors([query_feature])
+
+        # Εκτύπωση των top-10 αποτελεσμάτων
+        print("Top-10 Retrieval Results:")
+        for j, index in enumerate(indices.flatten()):
+            result_image_path = train_images[index]
+            result_image = cv2.imread(os.path.join(result_image_path), cv2.IMREAD_GRAYSCALE)
+
+            query_image_intensity_histogram = compute_normalized_intensity_histogram(query_image)
+            query_image_lbp_histogram = compute_normalized_lbp_histogram(query_image)
+            
+            result_image_intensity_histogram = compute_normalized_intensity_histogram(result_image)
+            result_image_lbp_histogram = compute_normalized_lbp_histogram(result_image)
+
+            plt.figure(1, figsize=(12, 10))  # Set a larger figure size (width, height)
+            plt.subplot(2, 2, 1)
+            plt.plot(query_image_intensity_histogram, color='gray')
+            plt.title(f'Normalized Intensity Histogram (query_image) - {os.path.basename(query_image_path)}')
+            plt.subplot(2, 2, 2)
+            plt.plot(query_image_lbp_histogram, color='gray')
+            plt.title(f'Normalized LBP Histogram (query_image) - {os.path.basename(query_image_path)}')
+            plt.subplot(2, 2, 3)
+            plt.plot(result_image_intensity_histogram, color='gray')
+            plt.title(f'Normalized Intensity Histogram (result_image) - {os.path.basename(result_image_path)}')
+            plt.subplot(2, 2, 4)
+            plt.plot(result_image_lbp_histogram, color='gray')
+            plt.title(f'Normalized LBP Histogram (result_image) - {os.path.basename(result_image_path)}')
+
+            subdirectory_name = '../c_histograms'
+            subdirectory_path = os.path.join(os.getcwd(), subdirectory_name)
+            os.makedirs(subdirectory_path, exist_ok=True)
+            histogram_filename = os.path.splitext(os.path.basename(query_image_path))[0] + '_' + str(j+1) + '_histograms.png'
+            histogram_filepath = os.path.join(subdirectory_path, histogram_filename)
+            plt.savefig(histogram_filepath)
+            
+            l1, l2 = calculate_distances(query_image, result_image)
+
+            print(f"{j+1}. {result_image_path} - L1: {l1}, L2: {l2}")
+
+            csv_writer.writerow([query_image_path, result_image_path, j+1, l1, l2])
