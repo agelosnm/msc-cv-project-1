@@ -31,44 +31,44 @@ folder_path = 'flowers'
 
 images_path = [os.path.join(folder_path, filename) for filename in os.listdir(folder_path) if filename.endswith('.jpg')]
 
-# A
-for image_path in images_path:
-    image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    intensity_histogram = compute_normalized_intensity_histogram(image)
-    lbp_histogram = compute_normalized_lbp_histogram(image)
+# # A
+# for image_path in images_path:
+#     image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+#     intensity_histogram = compute_normalized_intensity_histogram(image)
+#     lbp_histogram = compute_normalized_lbp_histogram(image)
 
-    plt.figure(1)
-    plt.subplot(2, 1, 1)
-    plt.plot(intensity_histogram, color='gray')
-    plt.title(f'Normalized Intensity Histogram - {os.path.basename(image_path)}')
-    plt.subplot(2, 1, 2)
-    plt.plot(lbp_histogram, color='gray')
-    plt.title(f'Normalized LBP Histogram - {os.path.basename(image_path)}')
+#     plt.figure(1)
+#     plt.subplot(2, 1, 1)
+#     plt.plot(intensity_histogram, color='gray')
+#     plt.title(f'Normalized Intensity Histogram - {os.path.basename(image_path)}')
+#     plt.subplot(2, 1, 2)
+#     plt.plot(lbp_histogram, color='gray')
+#     plt.title(f'Normalized LBP Histogram - {os.path.basename(image_path)}')
 
-    subdirectory_name = 'a_histograms'
-    subdirectory_path = os.path.join(os.getcwd(), subdirectory_name)
-    os.makedirs(subdirectory_path, exist_ok=True)
-    histogram_filename = os.path.splitext(os.path.basename(image_path))[0] + '_histograms.png'
-    histogram_filepath = os.path.join(subdirectory_path, histogram_filename)
-    plt.savefig(histogram_filepath)
-    print(f"Histograms for {image_path} saved ({subdirectory_name}/{histogram_filename})")
+#     subdirectory_name = 'a_histograms'
+#     subdirectory_path = os.path.join(os.getcwd(), subdirectory_name)
+#     os.makedirs(subdirectory_path, exist_ok=True)
+#     histogram_filename = os.path.splitext(os.path.basename(image_path))[0] + '_histograms.png'
+#     histogram_filepath = os.path.join(subdirectory_path, histogram_filename)
+#     plt.savefig(histogram_filepath)
+#     print(f"Histograms for {image_path} saved ({subdirectory_name}/{histogram_filename})")
 
-# B
-csv_filename = 'b_images_distances.csv'
-with open(csv_filename, 'w', newline='') as csvfile:
-    csv_writer = csv.writer(csvfile)
+# # B
+# csv_filename = 'b_results.csv'
+# with open(csv_filename, 'w', newline='') as csvfile:
+#     csv_writer = csv.writer(csvfile)
     
-    csv_writer.writerow(['Image1', 'Image2', 'L1 Distance', 'L2 Distance'])
+#     csv_writer.writerow(['Image1', 'Image2', 'L1 Distance', 'L2 Distance'])
     
-    for i, image_path1 in enumerate(images_path):
-        for j, image_path2 in enumerate(images_path):
-            if i != j:
-                image1 = cv2.imread(os.path.join(image_path1), cv2.IMREAD_GRAYSCALE)
-                image2 = cv2.imread(os.path.join(image_path2), cv2.IMREAD_GRAYSCALE)
+#     for i, image_path1 in enumerate(images_path):
+#         for j, image_path2 in enumerate(images_path):
+#             if i != j:
+#                 image1 = cv2.imread(os.path.join(image_path1), cv2.IMREAD_GRAYSCALE)
+#                 image2 = cv2.imread(os.path.join(image_path2), cv2.IMREAD_GRAYSCALE)
                 
-                l1, l2 = calculate_distances(image1, image2)                
-                csv_writer.writerow([f"{image_path1}", f"{image_path2}", l1, l2])
-                print(f"Distance between Image {image_path1} and Image {image_path2} - L1: {l1}, L2: {l2}")
+#                 l1, l2 = calculate_distances(image1, image2)                
+#                 csv_writer.writerow([f"{image_path1}", f"{image_path2}", l1, l2])
+#                 print(f"Distance between Image {image_path1} and Image {image_path2} - L1: {l1}, L2: {l2}")
 
 # C
 images = os.listdir(folder_path)
@@ -145,7 +145,7 @@ with open(csv_filename, 'w', newline='') as csvfile:
             subdirectory_name = '../c_histograms'
             subdirectory_path = os.path.join(os.getcwd(), subdirectory_name)
             os.makedirs(subdirectory_path, exist_ok=True)
-            histogram_filename = os.path.splitext(os.path.basename(query_image_path))[0] + '_' + str(j+1) + '_histograms.png'
+            histogram_filename = os.path.splitext(os.path.basename(query_image_path))[0] + '_' + os.path.splitext(os.path.basename(result_image_path))[0] + '_' + str(j+1) + '_histograms.png'
             histogram_filepath = os.path.join(subdirectory_path, histogram_filename)
             plt.savefig(histogram_filepath)
             
