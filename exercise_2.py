@@ -1,77 +1,66 @@
+import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from PIL import Image
 
-def dft_coefficients(image_fourier_transform):
-    # Shift the spectrum to center the low frequencies
-    shifted_spectrum = np.fft.fftshift(np.abs(image_fourier_transform))
-    
-    # Extract the phase spectrum
-    phase_spectrum = np.angle(image_fourier_transform)
-    
-    # Display the original image, magnitude spectrum, and phase
-    plt.figure(figsize=(12, 6))
-    
-    plt.subplot(1, 3, 1)
-    plt.imshow(image, cmap='gray')
-    plt.title('Original Image')
-    plt.axis('off')
-    
-    plt.subplot(1, 3, 2)
-    plt.imshow(np.log(1 + shifted_spectrum), cmap='gray')
-    plt.title('Magnitude Spectrum')
-    plt.axis('off')
-    
-    plt.subplot(1, 3, 3)
-    plt.imshow(phase_spectrum, cmap='gray')
-    plt.title('Phase Spectrum')
-    plt.axis('off')
-    
-    plt.show()
+image = cv2.imread('images-project-1/cameraman.bmp', cv2.IMREAD_GRAYSCALE)
 
-def reconstruct_image(fourier_transform, percentage):
-    # Calculate the number of coefficients to keep based on the given percentage
-    num_coeffs_x = int(percentage * fourier_transform.shape[0] / 100)
-    num_coeffs_y = int(percentage * fourier_transform.shape[1] / 100)
+dft = np.fft.fft2(image)
+dft_shift = np.fft.fftshift(dft)
 
-    # Crop the Fourier transform based on the calculated coefficients
-    cropped_transform = fourier_transform[:num_coeffs_x, :num_coeffs_y]
+magnitude_spectrum = np.log(np.abs(dft_shift))
+phase_spectrum = np.angle(dft_shift)
 
-    # Pad the cropped transform to the original size
-    padded_transform = np.pad(cropped_transform, ((0, fourier_transform.shape[0] - num_coeffs_x), 
-                                                 (0, fourier_transform.shape[1] - num_coeffs_y)),
-                             mode='constant', constant_values=0)
+plt.subplot(1, 3, 1)
+plt.imshow(image, cmap='gray')
+plt.title("Original Image")
 
-    # Reconstruct the image using inverse Fourier transform
-    reconstructed_image = np.fft.ifft2(np.fft.ifftshift(padded_transform)).real
+plt.subplot(1, 3, 2)
+plt.imshow(magnitude_spectrum, cmap='gray')
+plt.title("Magnitude Spectrum")
 
-    return reconstructed_image
+plt.subplot(1, 3, 3)
+plt.imshow(phase_spectrum, cmap='gray')
+plt.title("Phase Spectrum")
 
-# Load the image and convert it to grayscale
-image_path = "images-project-1/cameraman.bmp"
-image = np.array(Image.open(image_path).convert("L"))
+plt.show()
 
-# Compute the 2D Fourier transform of the image
-fourier_transform = np.fft.fft2(image)
+percentages = [0.2, 0.4, 0.6, 0.8]
+reconstructed_images = []
+reconstructed_images_mse = []
 
-# Display the DFT coefficients (original image, magnitude spectrum,     and phase spectrum)
-dft_coefficients(fourier_transform)
-
-# Define different percentages of coefficients to keep for reconstruction
-percentages = [20, 40, 60, 80]
-
-# Display reconstructed images for different percentages
-plt.figure(figsize=(15, 10))
 for i, percentage in enumerate(percentages, 1):
-    # Reconstruct the image using the specified percentage of coefficients
-    reconstructed_image = reconstruct_image(fourier_transform, percentage)
-    
-    # Calculate and display the Mean Squared Error (MSE)
+    rows, cols = image.shape
+    mask_rows = int(rows * percentage)
+    mask_cols = int(cols * percentage)
+    mask = np.zeros((rows, cols), dtype=np.uint8)
+    mask[rows // 2 - mask_rows // 2: rows // 2 + mask_rows // 2,
+         cols // 2 - mask_cols // 2: cols // 2 + mask_cols // 2] = 1
+
+    masked_dft_shift = dft_shift * mask
+
+    inverse_shifted = np.fft.ifftshift(masked_dft_shift)
+    inverse_result = np.fft.ifft2(inverse_shifted)
+    reconstructed_image = np.abs(inverse_result)
+
     mse = np.mean((image - reconstructed_image) ** 2)
-    
-    plt.subplot(2, 2, i)
-    plt.imshow(reconstructed_image, cmap='gray')
-    plt.title(f'Reconstruction with {percentage}% Coefficients\nMSE = {mse:.2f}')
-    plt.axis('off')
+
+    reconstructed_images.append(reconstructed_image)
+    reconstructed_images_mse.append(mse)
+
+plt.subplot(2, 2, 1)
+plt.imshow(reconstructed_images[0], cmap='gray')
+plt.title(f"{"Image with 20% Coefficients"}\nMSE: {reconstructed_images_mse[0]:.2f}")
+
+plt.subplot(2, 2, 2)
+plt.imshow(reconstructed_images[1], cmap='gray')
+plt.title(f"{"Image with 40% Coefficients"}\nMSE: {reconstructed_images_mse[1]:.2f}")
+
+plt.subplot(2, 2, 3)
+plt.imshow(reconstructed_images[2], cmap='gray')
+plt.title(f"{"Image with 60% Coefficients"}\nMSE: {reconstructed_images_mse[2]:.2f}")
+
+plt.subplot(2, 2, 4)
+plt.imshow(reconstructed_images[3], cmap='gray')
+plt.title(f"{"Image with 80% Coefficients"}\nMSE: {reconstructed_images_mse[3]:.2f}")
 
 plt.show()
